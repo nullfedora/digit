@@ -14,3 +14,8 @@ enum Change {
     Insert(std::ops::Range<u64>, String),
     Delete(std::ops::Range<u64>, String),
 }
+
+#[cfg(test)]
+mod tests{
+    
+}
