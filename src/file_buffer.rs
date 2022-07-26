@@ -36,5 +36,11 @@ enum Change {
 
 #[cfg(test)]
 mod tests{
-    
+    use super::*;
+
+    #[test]
+    fn new_filebuffer_is_empty(){
+        let x = FileBuffer::new();
+        assert_eq!(x.changes.len(), 0);
+    }
 }
