@@ -12,6 +12,7 @@ fn main() {
         frontend::main::main();
     });
 
+    thread::sleep_ms(2);
 }
 
 #[cfg(test)]
