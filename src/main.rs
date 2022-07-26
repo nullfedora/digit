@@ -1,4 +1,4 @@
-mod filebuffer;
+mod file_buffer;
 
 fn main() {}
 
