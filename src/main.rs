@@ -1,4 +1,5 @@
-mod file_buffer;
+mod frontend;
+mod backend;
 
 fn main() {}
 
