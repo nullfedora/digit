@@ -16,7 +16,7 @@ fn main() {
     let frontend_message_queue: Arc<Mutex<MessageQueue<FrontendMessage>>> = Arc::new(Mutex::new(MessageQueue::new()));
     let backend_message_queue: Arc<Mutex<MessageQueue<BackendMessage>>> = Arc::new(Mutex::new(MessageQueue::new()));
 
-    //create copies of message queues for the render thread
+    //create copies of message queues for the render thread.  these need to be copied because they're moved 
     let render_frontend_message_queue = frontend_message_queue.clone();
     let render_backend_message_queue = backend_message_queue.clone();
 
@@ -25,7 +25,29 @@ fn main() {
         frontend::main::main(render_frontend_message_queue, render_backend_message_queue);
     });
 
-    thread::sleep(Duration::new(1, 0));
+    backend_message_queue.lock().unwrap().add_message(BackendMessage::TestMessage);
+
+    'running: loop{
+
+        //process messages from frontend
+        let mut incoming_queue = frontend_message_queue.lock().unwrap();
+   
+        while !incoming_queue.is_empty() {
+            let message = incoming_queue.get_message();
+
+            match message{
+                FrontendMessage::UserQuit => {
+                    break 'running;
+                },
+                _ => {}
+            }
+
+        }
+
+        drop(incoming_queue);    
+        
+        thread::sleep(Duration::from_millis(10));
+    }
 }
 
 #[cfg(test)]

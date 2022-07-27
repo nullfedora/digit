@@ -35,12 +35,13 @@ impl<T> MessageQueue<T>{
 
 ///Messages that the frontend thread can send to the backend thread
 pub enum FrontendMessage{
-    UserQuit
+    UserQuit,
+    TestMessage
 }
 
 ///Messages that the backend thread can send to the frontend thread
 pub enum BackendMessage{
-
+    TestMessage
 }
 
 #[cfg(test)]
