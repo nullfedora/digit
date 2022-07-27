@@ -26,6 +26,11 @@ impl<T> MessageQueue<T>{
     pub fn get_message(&mut self) -> T{
         self.messages.remove(0)
     }
+
+    ///Gets whether the queue has messages in it
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 ///Messages that the frontend thread can send to the backend thread
@@ -78,5 +83,21 @@ mod tests{
         x.get_message();
 
         assert_eq!(x.len(), 0);
+    }
+
+    #[test]
+    fn new_message_queue_is_empty(){
+        let x: MessageQueue<()> = MessageQueue::new();
+
+        assert_eq!(x.is_empty(), true);
+    }
+
+    #[test]
+    fn message_queue_with_message_is_not_empty(){
+        let mut x: MessageQueue<()> = MessageQueue::new();
+
+        x.add_message(());
+
+        assert_eq!(x.is_empty(), false);
     }
 }
