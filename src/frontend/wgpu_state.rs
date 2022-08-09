@@ -1,5 +1,7 @@
 use wgpu;
 
+///Handles the surface created with WGPU, and the device configuration.  
+/// Also handles resizing the surface in case of a window resize.
 pub struct WGPUState{
     surface: wgpu::Surface,
     device: wgpu::Device,
@@ -9,7 +11,7 @@ pub struct WGPUState{
 }
 
 impl WGPUState{
-    //Create a new wgpustate from a window.  Taken from https://sotrh.github.io/learn-wgpu/beginner/tutorial2-surface/#state-new
+    //Create a new wgpustate from a glfw window.  Taken from https://sotrh.github.io/learn-wgpu/beginner/tutorial2-surface/#state-new
     pub async fn new(window: &glfw::Window) -> WGPUState{
         
 
@@ -56,13 +58,17 @@ impl WGPUState{
         }
     }
 
-     
+    ///Called when the window resizes to update the surface to match the new window size.
+    ///# panics
+    /// Panics if the new dimensions are zero in either dimension.
     pub fn resize(&mut self, new_size: (i32, i32)) { //glfw::WindowEvent::Size has i32, i32
         if new_size.0 > 0 && new_size.1 > 0 {
             self.size = new_size;
             self.config.width = new_size.0 as u32;
             self.config.height = new_size.1 as u32;
             self.surface.configure(&self.device, &self.config)
+        }else{
+            panic!("Size of window cannot be zero in either dimension!");
         }
     }
 
