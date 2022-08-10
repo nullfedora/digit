@@ -39,6 +39,9 @@ fn main() {
                 FrontendMessage::UserQuit => {
                     break 'running;
                 },
+                FrontendMessage::DebugMessage(message) => {
+                    println!("[DEBUG] [FRONTEND]: {:?}", message)
+                }
                 _ => {}
             }
 

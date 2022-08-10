@@ -34,8 +34,10 @@ impl<T> MessageQueue<T>{
 }
 
 ///Messages that the frontend thread can send to the backend thread
+#[derive(Clone)]
 pub enum FrontendMessage{
     UserQuit,
+    DebugMessage(Box<String>),
     TestMessage
 }
 

@@ -12,3 +12,7 @@ log = "0.4"
 wgpu = "0.13"
 glfw = "0.45.0"
 pollster = "0.2"
+
+#for flamegraph
+[profile.release]
+debug = true
