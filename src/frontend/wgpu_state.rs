@@ -1,4 +1,6 @@
 use wgpu;
+use wgpu::util::DeviceExt;
+use crate::frontend::rendering::mesh::{Vertex, VERTICES, INDICES};
 
 ///Handles the surface created with WGPU, and the device configuration.  
 /// Also handles resizing the surface in case of a window resize.
@@ -8,7 +10,10 @@ pub struct WGPUState{
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: (i32, i32),
-    pub render_pipeline: wgpu::RenderPipeline
+    pub render_pipeline: wgpu::RenderPipeline,
+    pub vertex_buffer: wgpu::Buffer,
+    pub index_buffer: wgpu::Buffer,
+    pub num_indices: u32
 }
 
 impl WGPUState{
@@ -76,7 +81,9 @@ impl WGPUState{
             vertex: wgpu::VertexState{
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[]
+                buffers: &[
+                    Vertex::desc()
+                ]
             },
             fragment: Some(wgpu::FragmentState{
                 module: &shader,
@@ -105,13 +112,37 @@ impl WGPUState{
             multiview: None
         });
 
+        //create vertex buffer
+        let vertex_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor{
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(VERTICES),
+                usage: wgpu::BufferUsages::VERTEX
+            }
+        );
+
+        //create index buffer
+        let index_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor{
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(INDICES),
+                usage: wgpu::BufferUsages::INDEX
+            }
+        );
+
+        //calculate number of indices
+        let num_indices = INDICES.len() as u32;
+
         WGPUState{
             surface,
             device,
             queue,
             config,
             size,
-            render_pipeline
+            render_pipeline,
+            vertex_buffer,
+            index_buffer,
+            num_indices
         }
     }
 

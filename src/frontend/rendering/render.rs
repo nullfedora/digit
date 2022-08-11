@@ -35,7 +35,9 @@ pub fn render(wgpu_state: &WGPUState, render_state: &RenderState){
         });
 
         render_pass.set_pipeline(&wgpu_state.render_pipeline);
-        render_pass.draw(0..3, 0..1);
+        render_pass.set_vertex_buffer(0, wgpu_state.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(wgpu_state.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        render_pass.draw_indexed(0..wgpu_state.num_indices, 0, 0..1);
 
     }
 
