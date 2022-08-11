@@ -7,11 +7,11 @@ use super::render_state::RenderState;
 ///adapted from tuturial https://sotrh.github.io/learn-wgpu/beginner/tutorial2-surface/#render
 pub fn render(wgpu_state: &WGPUState, render_state: &RenderState){
     
-    let output = wgpu_state.surface.get_current_texture().unwrap();
+    let output = wgpu_state.get_surface().get_current_texture().unwrap();
 
     let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-    let mut encoder = wgpu_state.device.create_command_encoder(&wgpu::CommandEncoderDescriptor{
+    let mut encoder = wgpu_state.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor{
         label: Some("Render Encoder")
     });
 
@@ -34,13 +34,13 @@ pub fn render(wgpu_state: &WGPUState, render_state: &RenderState){
             depth_stencil_attachment: None
         });
 
-        render_pass.set_pipeline(&wgpu_state.render_pipeline);
-        render_pass.set_vertex_buffer(0, wgpu_state.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(wgpu_state.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-        render_pass.draw_indexed(0..wgpu_state.num_indices, 0, 0..1);
+        render_pass.set_pipeline(&wgpu_state.get_render_pipeline());
+        render_pass.set_vertex_buffer(0, wgpu_state.get_vertex_buffer().slice(..));
+        render_pass.set_index_buffer(wgpu_state.get_index_buffer().slice(..), wgpu::IndexFormat::Uint16);
+        render_pass.draw_indexed(0..wgpu_state.get_num_indices(), 0, 0..1);
 
     }
 
-    wgpu_state.queue.submit(std::iter::once(encoder.finish()));
+    wgpu_state.get_queue().submit(std::iter::once(encoder.finish()));
     output.present();
 }

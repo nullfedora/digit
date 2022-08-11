@@ -5,15 +5,15 @@ use crate::frontend::rendering::mesh::{Vertex, VERTICES, INDICES};
 ///Handles the surface created with WGPU, and the device configuration.  
 /// Also handles resizing the surface in case of a window resize.
 pub struct WGPUState{
-    pub surface: wgpu::Surface,
-    pub device: wgpu::Device,
-    pub queue: wgpu::Queue,
-    pub config: wgpu::SurfaceConfiguration,
-    pub size: (i32, i32),
-    pub render_pipeline: wgpu::RenderPipeline,
-    pub vertex_buffer: wgpu::Buffer,
-    pub index_buffer: wgpu::Buffer,
-    pub num_indices: u32
+    surface: wgpu::Surface,
+    device: wgpu::Device,
+    queue: wgpu::Queue,
+    config: wgpu::SurfaceConfiguration,
+    size: (i32, i32),
+    render_pipeline: wgpu::RenderPipeline,
+    vertex_buffer: wgpu::Buffer,
+    index_buffer: wgpu::Buffer,
+    num_indices: u32
 }
 
 impl WGPUState{
@@ -159,19 +159,51 @@ impl WGPUState{
         }
     }
 
-    /* 
-    fn input(&mut self, event: &WindowEvent) -> bool {
-        todo!()
+    ///Get the current surface of this wgpu_state.
+    pub fn get_surface(&self) -> &wgpu::Surface{
+        &self.surface
     }
 
-    fn update(&mut self){
-        todo!()
+    ///Get the current device of this wgpu_state
+    pub fn get_device(&self) -> &wgpu::Device{
+        &self.device
     }
 
-    fn render(&mut self){
-        todo!()
+    ///Get the current queue of this wgpu_state
+    pub fn get_queue(&self) -> &wgpu::Queue{
+        &self.queue
     }
-    */
+
+    ///Get the current surface configuration of this wgpu_state
+    pub fn get_config(&self) -> &wgpu::SurfaceConfiguration{
+        &self.config
+    }
+
+    ///Get the current surface size of this wgpu_state
+    pub fn get_size(&self) -> (i32, i32){
+        self.size
+    }
+
+    ///Get the current render pipeline for this wgpu_state
+    pub fn get_render_pipeline(&self) -> &wgpu::RenderPipeline{
+        &self.render_pipeline
+    }
+
+    ///Get the current vertex buffer for this wgpu_state
+    pub fn get_vertex_buffer(&self) -> &wgpu::Buffer {
+        &self.vertex_buffer
+    }
+
+    ///Get the current index buffer for this wgpu_state
+    pub fn get_index_buffer(&self) -> &wgpu::Buffer{
+        &self.index_buffer
+    }
+
+
+    ///Get the number of indices in this wgpu_state
+    pub fn get_num_indices(&self) -> u32{
+        self.num_indices
+    }
 }
 
 #[cfg(test)]
