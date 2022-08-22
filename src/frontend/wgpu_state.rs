@@ -1,6 +1,10 @@
+use bytemuck::bytes_of;
 use wgpu;
 use wgpu::util::DeviceExt;
-use crate::frontend::rendering::mesh::{Vertex, VERTICES, INDICES};
+use crate::frontend::rendering::{
+    mesh::{Vertex, VERTICES, INDICES},
+    render_state::RenderState};
+
 
 ///Handles the surface created with WGPU, and the device configuration.  
 /// Also handles resizing the surface in case of a window resize.
@@ -13,7 +17,9 @@ pub struct WGPUState{
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
-    num_indices: u32
+    num_indices: u32,
+    vertex_buffer_size: u32,
+    index_buffer_size: u32
 }
 
 impl WGPUState{
@@ -113,20 +119,22 @@ impl WGPUState{
         });
 
         //create vertex buffer
+        let vertex_buffer_contents: &[u8] = bytemuck::cast_slice(VERTICES);
         let vertex_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor{
                 label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
-                usage: wgpu::BufferUsages::VERTEX
+                contents: vertex_buffer_contents,
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
             }
         );
 
         //create index buffer
+        let index_buffer_contents: &[u8] = bytemuck::cast_slice(INDICES);
         let index_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor{
                 label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(INDICES),
-                usage: wgpu::BufferUsages::INDEX
+                contents: index_buffer_contents,
+                usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST
             }
         );
 
@@ -142,7 +150,9 @@ impl WGPUState{
             render_pipeline,
             vertex_buffer,
             index_buffer,
-            num_indices
+            num_indices,
+            vertex_buffer_size: vertex_buffer_contents.len() as u32,
+            index_buffer_size: index_buffer_contents.len() as u32
         }
     }
 
@@ -204,14 +214,67 @@ impl WGPUState{
     pub fn get_num_indices(&self) -> u32{
         self.num_indices
     }
+
+    /// Set the vertex and index buffer of this WGPUState based on the contents of render_state.
+    /// Resizes this WGPUState's vertex and index buffers if they aren't big enough for the new data.
+    /// Updates the num_indices value of this WGPUState to match the new data.
+    pub fn set_vertices_and_indices(&mut self, render_state: &mut RenderState){
+
+        render_state.pad_index_buffer();
+
+        let vertex_data: &[u8] = bytemuck::cast_slice(&render_state.vertices);
+        let index_data: &[u8] = bytemuck::cast_slice(&render_state.indices);
+
+        //recreate vertex buffer if current buffer is not big enough
+        if vertex_data.len() as u32 > self.vertex_buffer_size{
+            println!("Resizing Vertex Buffer");
+            self.vertex_buffer = self.device.create_buffer_init(
+                &wgpu::util::BufferInitDescriptor{
+                    label: Some("Vertex Buffer"),
+                    contents: vertex_data,
+                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                }
+            );
+            self.vertex_buffer_size = vertex_data.len() as u32
+        } else {
+            self.queue.write_buffer(&self.vertex_buffer, 0, vertex_data);
+        }
+
+        //recreate index buffer if current buffer is not big enough
+        if index_data.len() as u32 > self.index_buffer_size{
+            println!("Resizing Index Buffer");
+            self.index_buffer = self.device.create_buffer_init(
+                &wgpu::util::BufferInitDescriptor{
+                    label: Some("Index Buffer"),
+                    contents: index_data,
+                    usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST
+                }
+            );
+            self.index_buffer_size = index_data.len() as u32;
+        } else {
+            self.queue.write_buffer(&self.index_buffer, 0, index_data);
+        }
+
+        self.num_indices = render_state.num_indices;
+
+    }
 }
 
 #[cfg(test)]
 mod test{
     use super::*;
+    use once_cell::sync::Lazy;
+    use std::{sync::Mutex};
+    use glfw::Glfw;
+
+    static mut GLFW: Lazy<Mutex<Glfw>> = Lazy::new(|| {
+        let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        Mutex::new(glfw)
+    });
+
     #[test]
     fn error_on_resize_with_dimension_zero(){
-        let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        let glfw = unsafe { GLFW.lock().unwrap() };
 
         let (mut window, events) = glfw.create_window(640, 480, "Digit", glfw::WindowMode::Windowed)
             .expect("Failed to create window!");
@@ -247,5 +310,48 @@ mod test{
         Err(..) => {}
     }
 
+    window.close();
+    }
+
+    #[test]
+    fn no_error_on_resize_with_nonzero_dimension(){
+        let glfw = unsafe { GLFW.lock().unwrap() };
+
+        let (mut window, events) = glfw.create_window(640, 480, "Digit", glfw::WindowMode::Windowed)
+            .expect("Failed to create window!");
+
+    
+        window.set_pos_polling(true);
+        window.set_all_polling(true);
+        window.set_size_polling(true);
+        window.set_close_polling(true);
+        window.set_refresh_polling(true);
+        window.set_focus_polling(true);
+        window.set_iconify_polling(true);
+        window.set_framebuffer_size_polling(true);
+        window.set_key_polling(true);
+        window.set_char_polling(true);
+        window.set_char_mods_polling(true);
+        window.set_mouse_button_polling(true);
+        window.set_cursor_pos_polling(true);
+        window.set_cursor_enter_polling(true);
+        window.set_scroll_polling(true);
+        window.set_maximize_polling(true);
+        window.set_content_scale_polling(true);
+
+        glfw::Context::make_current(&mut window);
+
+
+    let mut wgpu_state = pollster::block_on(WGPUState::new(&window));
+
+    let result = wgpu_state.resize((20, 20));
+
+    match result{
+        Ok(..) => {},
+        Err(..) => {panic!("Should have returned without error!")}
+    }
+
+    window.close();
+    
     }
 }

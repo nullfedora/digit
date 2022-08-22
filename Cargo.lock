@@ -219,6 +219,7 @@ dependencies = [
  "glfw",
  "jumprope",
  "log",
+ "once_cell",
  "pollster",
  "wgpu",
 ]

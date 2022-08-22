@@ -1,5 +1,6 @@
 
 
+use crate::frontend::rendering::mesh::Vertex;
 use crate::intermediary::message_queue::{MessageQueue, FrontendMessage, BackendMessage};
 use std::thread;
 use std::time::Duration;
@@ -95,6 +96,7 @@ pub fn main(frontend_message_queue: Arc<Mutex<MessageQueue<FrontendMessage>>>, b
             }
         }
 
+        //Cleanup stuff if the user has quit
         if should_quit {
             messages_for_backend.push(FrontendMessage::UserQuit);
 
@@ -111,6 +113,22 @@ pub fn main(frontend_message_queue: Arc<Mutex<MessageQueue<FrontendMessage>>>, b
                 outgoing_queue.add_message(message.clone());
             }
         }
+
+        //modify render state
+        render_state.clear();
+        render_state.add_mesh(
+            &[
+                Vertex { position: [0.5, -0.5, 0.0], color: [1.0, 0.0, 0.0]},
+                Vertex { position: [0.0, 0.5, 0.0], color: [0.0, 1.0, 0.0]},
+                Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0]}
+            ],
+            &[
+                0, 1, 2,
+            ] 
+        );
+
+        //set vertex and index buffers
+        wgpu_state.set_vertices_and_indices(&mut render_state);
 
         //render the screen
         let now = std::time::Instant::now();
