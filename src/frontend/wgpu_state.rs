@@ -63,7 +63,8 @@ impl WGPUState{
             format: surface.get_supported_formats(&adapter)[0],
             width: size.0 as u32,
             height: size.1 as u32,
-            present_mode: wgpu::PresentMode::Fifo
+            present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto
         };
         surface.configure(&device, &config);
 

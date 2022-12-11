@@ -1,14 +1,15 @@
+use std::collections::LinkedList;
 
 ///Stores a FIFO queue of messages intended for communicating between threads
 pub struct MessageQueue<T>{
-    messages: Vec<T>
+    messages: LinkedList<T>
 }
 
 impl<T> MessageQueue<T>{
     ///Creates a new empty message queue
     pub fn new() -> MessageQueue<T>{
         MessageQueue{
-            messages: Vec::new()
+            messages: LinkedList::new()
         }
     }
 
@@ -19,12 +20,12 @@ impl<T> MessageQueue<T>{
 
     ///Add a new message to the end of the queue.
     pub fn add_message(&mut self, new_message: T){
-        self.messages.push(new_message);
+        self.messages.push_back(new_message);
     }
 
     ///Gets the oldest message in the queue, also removing that message from the queue.
     pub fn get_message(&mut self) -> T{
-        self.messages.remove(0)
+        self.messages.pop_front().unwrap()
     }
 
     ///Gets whether the queue has messages in it
